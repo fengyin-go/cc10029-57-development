@@ -79,5 +79,24 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+### 整组决议分发
+
+复盘会议除了旧版的单任务分发，还支持把附件中的多条决议整组分发：
+
+- `PUT /api/review_meeting/{id}/attachment`：保存本次有效的决议条目
+  （`item_id` / `content` / `owner` / `kind`），已派发条目的任务关联不会被覆盖。
+- `POST /api/review_meeting/{id}/resolution-dispatch`：按附件逐条派发，
+  支持 `mode=batch|retry`、`item_ids` 和 `max_items` 分批送出。
+- `GET /api/review_meeting/{id}/resolutions/{item_id}`：查询单条决议是否已获准办理。
+- `GET /api/review_meeting/{id}/attachment`：读取附件条目和最近一次分发结果。
+- `GET /api/improve_task/claims`：教师待办/认领列表，关联来源决议和派发请求号。
+- `GET /api/improve_task/{id}/receipt`：任务的受理回执与认领记录。
+
+规则：只有签认后的纪要可以分发；背景说明条目只留档不产生任务；
+未指定责任人的条目标记为「待补充」且不生成占位任务；
+任务按（纪要号，条目编号）幂等，补派时沿用第一次的任务号；
+每条任务都有独立的派发请求号和受理回执。前端在复盘会议行上提供
+「整组决议分发」面板，在诊改任务页提供「教师认领列表」和「受理回执」入口。
+
 领域：应用开发
 子方向：web前端/全栈开发
